@@ -67,12 +67,6 @@ The response includes a `reasoning` field with the model's thought process:
     "completion_tokens": 133,
     "prompt_tokens": 37,
     "total_tokens": 170,
-    "completion_tokens_details": {
-      "accepted_prediction_tokens": 0,
-      "audio_tokens": 0,
-      "reasoning_tokens": 0,
-      "rejected_prediction_tokens": 0
-    },
     "prompt_tokens_details": {
       "audio_tokens": 0,
       "cached_tokens": 32
@@ -103,12 +97,6 @@ The `reasoning` field is not included:
     "completion_tokens": 10,
     "prompt_tokens": 37,
     "total_tokens": 47,
-    "completion_tokens_details": {
-      "accepted_prediction_tokens": 0,
-      "audio_tokens": 0,
-      "reasoning_tokens": 0,
-      "rejected_prediction_tokens": 0
-    },
     "prompt_tokens_details": {
       "audio_tokens": 0,
       "cached_tokens": 0
@@ -243,12 +231,6 @@ The `usage` object provides token counts:
   "completion_tokens": 133,
   "prompt_tokens": 37,
   "total_tokens": 170,
-  "completion_tokens_details": {
-    "accepted_prediction_tokens": 0,
-    "audio_tokens": 0,
-    "reasoning_tokens": 0,
-    "rejected_prediction_tokens": 0
-  },
   "prompt_tokens_details": {
     "audio_tokens": 0,
     "cached_tokens": 32
