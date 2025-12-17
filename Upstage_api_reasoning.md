@@ -260,17 +260,6 @@ The `usage` object provides token counts:
 
 ---
 
-## Best Practices
-
-### 1. Choose the Right Effort Level
-
-| Use Case | Recommended |
-|----------|-------------|
-| Simple Q&A, chitchat | `low` |
-| Math, logic, coding | `high` |
-
----
-
 ## Summary
 
 | Feature | Description |
