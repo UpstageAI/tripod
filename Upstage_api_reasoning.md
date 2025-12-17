@@ -31,12 +31,11 @@ curl https://api.upstage.ai/v1/chat/completions \
 
 ## The `reasoning_effort` Parameter
 
-The `reasoning_effort` parameter controls whether reasoning is enabled and how deep the model thinks.
+The `reasoning_effort` parameter controls whether reasoning is enabled.
 
 | Value | Reasoning | Description |
 |-------|-----------|-------------|
-| `high` | ✅ ON | Deep reasoning, best for complex problems |
-| `medium` | ✅ ON | Balanced reasoning for general use |
+| `high` | ✅ ON | Reasoning enabled, best for complex problems |
 | `low` | ❌ OFF | No reasoning, fastest response (default) |
 
 **Default value:** `low` (reasoning disabled)
@@ -45,7 +44,7 @@ The `reasoning_effort` parameter controls whether reasoning is enabled and how d
 
 ## Response Format
 
-### When Reasoning is ON (`high` or `medium`)
+### When Reasoning is ON (`high`)
 
 The response includes a `reasoning` field with the model's thought process:
 
@@ -65,11 +64,18 @@ The response includes a `reasoning` field with the model's thought process:
     }
   ],
   "usage": {
-    "prompt_tokens": 15,
-    "completion_tokens": 45,
-    "total_tokens": 60,
+    "completion_tokens": 133,
+    "prompt_tokens": 37,
+    "total_tokens": 170,
     "completion_tokens_details": {
-      "reasoning_tokens": 35
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 32
     }
   }
 }
@@ -94,11 +100,18 @@ The `reasoning` field is not included:
     }
   ],
   "usage": {
-    "prompt_tokens": 15,
     "completion_tokens": 10,
-    "total_tokens": 25,
+    "prompt_tokens": 37,
+    "total_tokens": 47,
     "completion_tokens_details": {
-      "reasoning_tokens": 0
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
     }
   }
 }
@@ -141,18 +154,27 @@ client = OpenAI(
 stream = client.chat.completions.create(
     model="tripod",
     messages=[{"role": "user", "content": "What is 15% of 80?"}],
-    extra_body={"reasoning_effort": "high"},
+    reasoning_effort="high",
     stream=True
 )
+
+reasoning_started = False
+content_started = False
 
 for chunk in stream:
     delta = chunk.choices[0].delta
     
     if hasattr(delta, 'reasoning') and delta.reasoning:
-        print(f"🧠 {delta.reasoning}", end='')
+        if not reasoning_started:
+            print("[Reasoning]")
+            reasoning_started = True
+        print(delta.reasoning, end='')
     
     if hasattr(delta, 'content') and delta.content:
-        print(f"💬 {delta.content}", end='')
+        if not content_started:
+            print("\n[Answer]")
+            content_started = True
+        print(delta.content, end='')
 ```
 
 ---
@@ -169,16 +191,16 @@ client = OpenAI(
     base_url="https://api.upstage.ai/v1"
 )
 
-# Enable reasoning with high effort
+# Enable reasoning
 response = client.chat.completions.create(
     model="tripod",
     messages=[{"role": "user", "content": "Solve: 3x + 5 = 20"}],
-    extra_body={"reasoning_effort": "high"}
+    reasoning_effort="high"
 )
 
 message = response.choices[0].message
 
-# Access reasoning (only available when reasoning_effort is high or medium)
+# Access reasoning (only available when reasoning_effort is high)
 if hasattr(message, 'reasoning'):
     print(f"Thinking: {message.reasoning}")
 
@@ -188,6 +210,13 @@ print(f"Answer: {message.content}")
 ### Choosing reasoning_effort
 
 ```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://api.upstage.ai/v1"
+)
+
 # For simple questions - use low (default, fastest)
 response = client.chat.completions.create(
     model="tripod",
@@ -195,18 +224,11 @@ response = client.chat.completions.create(
     # reasoning_effort defaults to "low"
 )
 
-# For moderate tasks - use medium
-response = client.chat.completions.create(
-    model="tripod",
-    messages=[{"role": "user", "content": "Summarize this article..."}],
-    extra_body={"reasoning_effort": "medium"}
-)
-
 # For complex problems - use high
 response = client.chat.completions.create(
     model="tripod",
     messages=[{"role": "user", "content": "Prove that √2 is irrational"}],
-    extra_body={"reasoning_effort": "high"}
+    reasoning_effort="high"
 )
 ```
 
@@ -214,21 +236,27 @@ response = client.chat.completions.create(
 
 ## Token Usage
 
-When reasoning is enabled, the `usage` object includes `reasoning_tokens`:
+The `usage` object provides token counts:
 
 ```json
 "usage": {
-  "prompt_tokens": 15,
-  "completion_tokens": 45,
-  "total_tokens": 60,
+  "completion_tokens": 133,
+  "prompt_tokens": 37,
+  "total_tokens": 170,
   "completion_tokens_details": {
-    "reasoning_tokens": 35
+    "accepted_prediction_tokens": 0,
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "rejected_prediction_tokens": 0
+  },
+  "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 32
   }
 }
 ```
 
-- `completion_tokens` = `reasoning_tokens` + content tokens
-- Use `reasoning_tokens` for detailed cost tracking
+- `cached_tokens`: Number of prompt tokens served from cache
 
 ---
 
@@ -239,7 +267,6 @@ When reasoning is enabled, the `usage` object includes `reasoning_tokens`:
 | Use Case | Recommended |
 |----------|-------------|
 | Simple Q&A, chitchat | `low` |
-| Summarization, translation | `medium` |
 | Math, logic, coding | `high` |
 
 ### 2. Exclude Reasoning from Conversation History
@@ -247,6 +274,13 @@ When reasoning is enabled, the `usage` object includes `reasoning_tokens`:
 When building multi-turn conversations, only include `content` in the history:
 
 ```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://api.upstage.ai/v1"
+)
+
 messages = []
 
 # User message
@@ -256,7 +290,7 @@ messages.append({"role": "user", "content": user_input})
 response = client.chat.completions.create(
     model="tripod",
     messages=messages,
-    extra_body={"reasoning_effort": "high"}
+    reasoning_effort="high"
 )
 
 # Add only content to history (not reasoning)
@@ -273,8 +307,6 @@ messages.append({
 | Feature | Description |
 |---------|-------------|
 | **Parameter** | `reasoning_effort` |
-| **Values** | `high`, `medium` (ON) / `low` (OFF, default) |
+| **Values** | `high` (ON) / `low` (OFF, default) |
 | **Output Field** | `reasoning` |
 | **Streaming** | Reasoning first, then content |
-| **Token Tracking** | `completion_tokens_details.reasoning_tokens` |
-
