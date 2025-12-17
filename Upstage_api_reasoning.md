@@ -269,37 +269,6 @@ The `usage` object provides token counts:
 | Simple Q&A, chitchat | `low` |
 | Math, logic, coding | `high` |
 
-### 2. Exclude Reasoning from Conversation History
-
-When building multi-turn conversations, only include `content` in the history:
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    api_key="YOUR_API_KEY",
-    base_url="https://api.upstage.ai/v1"
-)
-
-messages = []
-
-# User message
-messages.append({"role": "user", "content": user_input})
-
-# Get response
-response = client.chat.completions.create(
-    model="tripod",
-    messages=messages,
-    reasoning_effort="high"
-)
-
-# Add only content to history (not reasoning)
-messages.append({
-    "role": "assistant",
-    "content": response.choices[0].message.content
-})
-```
-
 ---
 
 ## Summary
