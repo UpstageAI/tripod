@@ -35,10 +35,10 @@ The `reasoning_effort` parameter controls whether reasoning is enabled.
 
 | Value | Reasoning | Description |
 |-------|-----------|-------------|
-| `high` | ✅ ON | Reasoning enabled, best for complex problems |
-| `low` | ❌ OFF | No reasoning, fastest response (default) |
+| `high` | ✅ ON | Reasoning enabled, best for complex problems (default) |
+| `low` | ❌ OFF | No reasoning, fastest response |
 
-**Default value:** `low` (reasoning disabled)
+**Default value:** `high` (reasoning enabled)
 
 ---
 
@@ -205,18 +205,18 @@ client = OpenAI(
     base_url="https://api.upstage.ai/v1"
 )
 
-# For simple questions - use low (default, fastest)
+# For complex problems - reasoning is ON by default
 response = client.chat.completions.create(
     model="tripod",
-    messages=[{"role": "user", "content": "Hi, how are you?"}]
-    # reasoning_effort defaults to "low"
+    messages=[{"role": "user", "content": "Prove that √2 is irrational"}]
+    # reasoning_effort defaults to "high"
 )
 
-# For complex problems - use high
+# For simple questions - disable reasoning for faster response
 response = client.chat.completions.create(
     model="tripod",
-    messages=[{"role": "user", "content": "Prove that √2 is irrational"}],
-    reasoning_effort="high"
+    messages=[{"role": "user", "content": "Hi, how are you?"}],
+    reasoning_effort="low"
 )
 ```
 
@@ -247,6 +247,6 @@ The `usage` object provides token counts:
 | Feature | Description |
 |---------|-------------|
 | **Parameter** | `reasoning_effort` |
-| **Values** | `high` (ON) / `low` (OFF, default) |
+| **Values** | `high` (ON, default) / `low` (OFF) |
 | **Output Field** | `reasoning` |
 | **Streaming** | Reasoning first, then content |
