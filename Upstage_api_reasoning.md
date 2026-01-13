@@ -21,7 +21,7 @@ curl https://api.upstage.ai/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "tripod",
+    "model": "solar-open",
     "messages": [{"role": "user", "content": "What is 15% of 80?"}],
     "reasoning_effort": "high"
   }'
@@ -35,23 +35,24 @@ The `reasoning_effort` parameter controls whether reasoning is enabled.
 
 | Value | Reasoning | Description |
 |-------|-----------|-------------|
-| `high` | ✅ ON | Reasoning enabled, best for complex problems (default) |
+| `high` | ✅ ON | Reasoning enabled, best for complex problems |
+| `medium` | ✅ ON | Reasoning enabled (default) |
 | `low` | ❌ OFF | No reasoning, fastest response |
 
-**Default value:** `high` (reasoning enabled)
+**Default value:** `medium` (reasoning enabled)
 
 ---
 
 ## Response Format
 
-### When Reasoning is ON (`high`)
+### When Reasoning is ON (`high` or `medium`)
 
 The response includes a `reasoning` field with the model's thought process:
 
 ```json
 {
   "id": "chatcmpl-abc123",
-  "model": "tripod",
+  "model": "solar-open",
   "choices": [
     {
       "index": 0,
@@ -82,7 +83,7 @@ The `reasoning` field is not included:
 ```json
 {
   "id": "chatcmpl-abc123",
-  "model": "tripod",
+  "model": "solar-open",
   "choices": [
     {
       "index": 0,
@@ -140,7 +141,7 @@ client = OpenAI(
 )
 
 stream = client.chat.completions.create(
-    model="tripod",
+    model="solar-open",
     messages=[{"role": "user", "content": "What is 15% of 80?"}],
     reasoning_effort="high",
     stream=True
@@ -181,14 +182,14 @@ client = OpenAI(
 
 # Enable reasoning
 response = client.chat.completions.create(
-    model="tripod",
+    model="solar-open",
     messages=[{"role": "user", "content": "Solve: 3x + 5 = 20"}],
     reasoning_effort="high"
 )
 
 message = response.choices[0].message
 
-# Access reasoning (only available when reasoning_effort is high)
+# Access reasoning (only available when reasoning_effort is high or medium)
 if hasattr(message, 'reasoning'):
     print(f"Thinking: {message.reasoning}")
 
@@ -205,16 +206,23 @@ client = OpenAI(
     base_url="https://api.upstage.ai/v1"
 )
 
-# For complex problems - reasoning is ON by default
+# For complex problems - use high for thorough reasoning
 response = client.chat.completions.create(
-    model="tripod",
-    messages=[{"role": "user", "content": "Prove that √2 is irrational"}]
-    # reasoning_effort defaults to "high"
+    model="solar-open",
+    messages=[{"role": "user", "content": "Prove that √2 is irrational"}],
+    reasoning_effort="high"
+)
+
+# Default behavior - medium reasoning
+response = client.chat.completions.create(
+    model="solar-open",
+    messages=[{"role": "user", "content": "What is the capital of France?"}]
+    # reasoning_effort defaults to "medium"
 )
 
 # For simple questions - disable reasoning for faster response
 response = client.chat.completions.create(
-    model="tripod",
+    model="solar-open",
     messages=[{"role": "user", "content": "Hi, how are you?"}],
     reasoning_effort="low"
 )
@@ -247,6 +255,6 @@ The `usage` object provides token counts:
 | Feature | Description |
 |---------|-------------|
 | **Parameter** | `reasoning_effort` |
-| **Values** | `high` (ON, default) / `low` (OFF) |
+| **Values** | `high` (ON) / `medium` (ON, default) / `low` (OFF) |
 | **Output Field** | `reasoning` |
 | **Streaming** | Reasoning first, then content |
